@@ -66,9 +66,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		String key = getAlreadyFilteredAttributeName();
 
 		if (isSingleSession()) {
-			// single session mode
 			if (TransactionSynchronizationManager.hasResource(sessionFactory)) {
-				// Do not modify the Session: just set the participate flag.
 				participate = true;
 			} else {
 				boolean isFirstRequest = !isAsyncDispatch(request);
@@ -84,10 +82,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 				}
 			}
 		} else {
-			// deferred close mode
 			Assert.state(!isAsyncStarted(request), "Deferred close mode is not supported on async dispatches");
 			if (SQLSessionFactoryUtils.isDeferredCloseActive(sessionFactory)) {
-				// Do not modify deferred close: just set the participate flag.
 				participate = true;
 			} else {
 				SQLSessionFactoryUtils.initDeferredClose(sessionFactory);
@@ -99,7 +95,6 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		} finally {
 			if (!participate) {
 				if (isSingleSession()) {
-					// single session mode
 					SQLSessionHolder sessionHolder = (SQLSessionHolder) TransactionSynchronizationManager
 							.unbindResource(sessionFactory);
 					if (!isAsyncStarted(request)) {
@@ -107,7 +102,6 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 						closeSession(sessionHolder.getSQLSession(), sessionFactory);
 					}
 				} else {
-					// deferred close mode
 					SQLSessionFactoryUtils.processDeferredClose(sessionFactory);
 				}
 			}

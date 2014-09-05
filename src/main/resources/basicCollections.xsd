@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+       Copyright 2013 Autentia Real Business Solution S.L.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+           http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="booleanCollection" type="booleanCollection"/>
+    <xs:complexType name="booleanCollection">
+        <xs:sequence>
+            <xs:element name="booleanElement" type="xs:boolean" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="bytesCollection" type="bytesCollection"/>
+    <xs:complexType name="bytesCollection">
+        <xs:sequence>
+            <xs:element name="bytesElement" type="xs:byte" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="shortCollection" type="shortCollection"/>
+    <xs:complexType name="shortCollection">
+        <xs:sequence>
+            <xs:element name="shortElement" type="xs:short" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="integerCollection" type="integerCollection"/>
+    <xs:complexType name="integerCollection">
+        <xs:sequence>
+            <xs:element name="integerElement" type="xs:integer" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="longCollection" type="longCollection"/>
+    <xs:complexType name="longCollection">
+        <xs:sequence>
+            <xs:element name="longElement" type="xs:long" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="floatCollection" type="floatCollection"/>
+    <xs:complexType name="floatCollection">
+        <xs:sequence>
+            <xs:element name="floatElement" type="xs:float" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="doubleCollection" type="doubleCollection"/>
+    <xs:complexType name="doubleCollection">
+        <xs:sequence>
+            <xs:element name="doubleElement" type="xs:double" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="stringCollection" type="stringCollection"/>
+    <xs:complexType name="stringCollection">
+        <xs:sequence>
+            <xs:element name="stringElement" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="dateCollection" type="dateCollection"/>
+    <xs:complexType name="dateCollection">
+        <xs:sequence>
+            <xs:element name="dateElement" type="xs:date" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

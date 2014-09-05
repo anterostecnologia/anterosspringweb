@@ -49,7 +49,7 @@ class AsyncRequestInterceptor extends CallableProcessingInterceptorAdapter
 	@Override
 	public <T> Object handleTimeout(NativeWebRequest request, Callable<T> task) {
 		this.timeoutInProgress = true;
-		return RESULT_NONE; // give other interceptors a chance to handle the timeout
+		return RESULT_NONE; 
 	}
 
 	@Override
@@ -64,8 +64,6 @@ class AsyncRequestInterceptor extends CallableProcessingInterceptorAdapter
 		}
 	}
 
-	// Implementation of DeferredResultProcessingInterceptor methods
-
 	public <T> void beforeConcurrentHandling(NativeWebRequest request, DeferredResult<T> deferredResult) {}
 	public <T> void preProcess(NativeWebRequest request, DeferredResult<T> deferredResult) {}
 	public <T> void postProcess(NativeWebRequest request, DeferredResult<T> deferredResult, Object result) {}
@@ -73,7 +71,7 @@ class AsyncRequestInterceptor extends CallableProcessingInterceptorAdapter
 	@Override
 	public <T> boolean handleTimeout(NativeWebRequest request, DeferredResult<T> deferredResult) {
 		this.timeoutInProgress = true;
-		return true; // give other interceptors a chance to handle the timeout
+		return true; 
 	}
 
 	@Override
