@@ -4,7 +4,16 @@ import br.com.anteros.core.utils.AbstractCoreTranslate;
 
 public class AnterosSpringWebTranslate extends AbstractCoreTranslate {
 
-	static {
-		bundleName = "anterosspringweb_messages";
+	public AnterosSpringWebTranslate(String messageBundleName) {
+		super(messageBundleName);
+	}
+
+	private static AnterosSpringWebTranslate translate;
+	
+	public AnterosSpringWebTranslate getInstance(){
+		if (translate==null){
+			translate = new AnterosSpringWebTranslate("anterosspringweb_messages");
+		}
+		return translate;
 	}
 }
