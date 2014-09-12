@@ -60,7 +60,7 @@ class AsyncRequestInterceptor extends CallableProcessingInterceptorAdapter
 	private void closeAfterTimeout() {
 		if (this.timeoutInProgress) {
 			logger.debug("Closing Anteros SQLSession after async request timeout");
-			SQLSessionFactoryUtils.closeSession(sessionHolder.getSQLSession());
+			SQLSessionFactoryUtils.closeSession(sessionHolder.getSession());
 		}
 	}
 

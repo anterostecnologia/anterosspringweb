@@ -1,4 +1,5 @@
 package br.com.anteros.springWeb.support;
+
 import java.io.IOException;
 
 import javax.servlet.FilterChain;
@@ -24,6 +25,7 @@ import br.com.anteros.spring.transaction.SQLSessionHolder;
 public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 
 	public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactory";
+
 
 	private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
 
@@ -56,7 +58,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	protected void doFilterInternal(
+			HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
@@ -68,7 +71,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		if (isSingleSession()) {
 			if (TransactionSynchronizationManager.hasResource(sessionFactory)) {
 				participate = true;
-			} else {
+			}
+			else {
 				boolean isFirstRequest = !isAsyncDispatch(request);
 				if (isFirstRequest || !applySessionBindingInterceptor(asyncManager, key)) {
 					logger.debug("Opening single Anteros SQLSession in OpenSQLSessionInViewFilter");
@@ -81,27 +85,33 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 					asyncManager.registerDeferredResultInterceptor(key, interceptor);
 				}
 			}
-		} else {
+		}
+		else {
 			Assert.state(!isAsyncStarted(request), "Deferred close mode is not supported on async dispatches");
 			if (SQLSessionFactoryUtils.isDeferredCloseActive(sessionFactory)) {
 				participate = true;
-			} else {
+			}
+			else {
 				SQLSessionFactoryUtils.initDeferredClose(sessionFactory);
 			}
 		}
 
 		try {
 			filterChain.doFilter(request, response);
-		} finally {
+		}
+		finally {
 			if (!participate) {
 				if (isSingleSession()) {
-					SQLSessionHolder sessionHolder = (SQLSessionHolder) TransactionSynchronizationManager
-							.unbindResource(sessionFactory);
+					// single session mode
+					SQLSessionHolder sessionHolder =
+							(SQLSessionHolder) TransactionSynchronizationManager.unbindResource(sessionFactory);
 					if (!isAsyncStarted(request)) {
 						logger.debug("Closing single Anteros SQLSession in OpenSQLSessionInViewFilter");
-						closeSession(sessionHolder.getSQLSession(), sessionFactory);
+						closeSession(sessionHolder.getSession(), sessionFactory);
 					}
-				} else {
+				}
+				else {
+					// deferred close mode
 					SQLSessionFactoryUtils.processDeferredClose(sessionFactory);
 				}
 			}
