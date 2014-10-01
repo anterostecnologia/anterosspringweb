@@ -16,6 +16,8 @@ import org.springframework.web.context.request.async.WebAsyncUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import br.com.anteros.core.log.Logger;
+import br.com.anteros.core.log.LoggerProvider;
 import br.com.anteros.persistence.session.SQLSession;
 import br.com.anteros.persistence.session.SQLSessionFactory;
 import br.com.anteros.spring.transaction.SQLSessionFactoryUtils;
@@ -26,7 +28,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 
 	public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactory";
 
-
+    private static Logger LOG = LoggerProvider.getInstance().getLogger(OpenSQLSessionInViewFilter.class);
+    
 	private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
 
 	private boolean singleSession = true;
@@ -97,7 +100,9 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		}
 
 		try {
+			LOG.debug("Before execute doFilter");
 			filterChain.doFilter(request, response);
+			LOG.debug("After execute doFilter");
 		}
 		finally {
 			if (!participate) {

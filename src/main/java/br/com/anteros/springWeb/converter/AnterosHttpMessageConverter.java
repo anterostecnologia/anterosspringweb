@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import br.com.anteros.persistence.serialization.jackson.AnterosObjectMapper;
 import br.com.anteros.persistence.session.SQLSessionFactory;
 
-@Component
+@Component(value="singleton")
 public class AnterosHttpMessageConverter extends MappingJackson2HttpMessageConverter {
 
 	private SQLSessionFactory sessionFactory;
