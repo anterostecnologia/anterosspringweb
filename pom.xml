@@ -37,6 +37,12 @@
 		<!-- ANTEROS -->
 		<dependency>
 			<groupId>br.com.anteros</groupId>
+			<artifactId>Anteros-Persistence-Core</artifactId>
+			<version>LATEST</version>
+		</dependency>
+
+		<dependency>
+			<groupId>br.com.anteros</groupId>
 			<artifactId>Anteros-Persistence</artifactId>
 			<version>LATEST</version>
 		</dependency>
