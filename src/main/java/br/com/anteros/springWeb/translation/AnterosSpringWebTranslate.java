@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package br.com.anteros.springWeb.util;
+package br.com.anteros.springWeb.translation;
 
-import br.com.anteros.core.utils.AbstractCoreTranslate;
+import br.com.anteros.core.translation.AbstractCoreTranslate;
+import br.com.anteros.core.translation.TranslateMessage;
 
 public class AnterosSpringWebTranslate extends AbstractCoreTranslate {
 
-	private AnterosSpringWebTranslate(String messageBundleName) {
-		super(messageBundleName);
-	}
-	
+	private static AnterosSpringWebTranslate singleton;
 
-	static {
-		setInstance(new AnterosSpringWebTranslate("anterosspringweb_messages"));
+	public static AnterosSpringWebTranslate getInstance() {
+        if ( singleton == null )
+            singleton = new AnterosSpringWebTranslate(AnterosSpringWebTranslateMessages.class);
+
+        return (AnterosSpringWebTranslate) singleton;
+    }    
+	
+	public AnterosSpringWebTranslate(Class<? extends TranslateMessage> translateClass) {
+		super(translateClass);
 	}
 
 }
