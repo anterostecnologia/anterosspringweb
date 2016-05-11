@@ -42,6 +42,7 @@ public class AnterosHttpMessageConverter extends MappingJackson2HttpMessageConve
 
 	public AnterosHttpMessageConverter(SQLSessionFactory sessionFactory) {
 		this.setSessionFactory(sessionFactory);
+		this.setObjectMapper(new AnterosObjectMapper(sessionFactory));
 	}
 
 	@Autowired

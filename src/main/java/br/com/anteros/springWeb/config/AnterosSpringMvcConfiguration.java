@@ -2,6 +2,7 @@ package br.com.anteros.springWeb.config;
 
 import java.util.List;
 
+import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration.Dynamic;
@@ -25,6 +26,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import br.com.anteros.persistence.session.SQLSessionFactory;
 import br.com.anteros.spring.transaction.AnterosTransactionManager;
 import br.com.anteros.springWeb.converter.AnterosHttpMessageConverter;
+import br.com.anteros.springWeb.support.OpenSQLSessionInViewFilter;
 
 @Configuration
 @EnableTransactionManagement
@@ -32,6 +34,7 @@ import br.com.anteros.springWeb.converter.AnterosHttpMessageConverter;
 public abstract class AnterosSpringMvcConfiguration extends WebMvcConfigurerAdapter {
 
 	private static final String DISPATCHER = "dispatcher";
+	private static final String OPEN_SQL_SESSION_IN_VIEW_FILTER = "OpenSQLSessionInViewFilter";
 
 	public void onStartup(ServletContext servletContext) throws ServletException {
 		AnnotationConfigWebApplicationContext appContext = new AnnotationConfigWebApplicationContext();
@@ -71,6 +74,10 @@ public abstract class AnterosSpringMvcConfiguration extends WebMvcConfigurerAdap
 		Dynamic servlet = servletContext.addServlet(DISPATCHER, new DispatcherServlet(appContext));
 		servlet.addMapping("/");
 		servlet.setLoadOnStartup(1);
+		
+		FilterRegistration.Dynamic openSQLSessionInViewFilterChain = servletContext.addFilter(OPEN_SQL_SESSION_IN_VIEW_FILTER,
+				OpenSQLSessionInViewFilter.class);
+		openSQLSessionInViewFilterChain.addMappingForUrlPatterns(null, false, "/*");
 	}
 
 	public abstract Class<?>[] registerFirstConfigurationClasses();

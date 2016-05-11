@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
-import br.com.anteros.persistence.dsl.osql.AbstractOSQLQuery;
 import br.com.anteros.persistence.session.repository.Page;
 import br.com.anteros.persistence.session.repository.PageRequest;
 import br.com.anteros.persistence.session.service.SQLService;
@@ -48,12 +47,13 @@ import br.com.anteros.persistence.session.service.SQLService;
  * @param <ID> ID
  */
 @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+@SuppressWarnings("unchecked")
 public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 
-	private static Logger log = LoggerProvider.getInstance().getLogger(AbstractOSQLQuery.class.getName());
+	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLRestController.class.getName());
 
 	/**
-	 * Insert or Update object in database via POST or PUT methods;
+	 * Insere ou atualiza objeto no banco de dados  via método POST ou PUT.;
 	 * 
 	 * @param id
 	 * @return
@@ -68,7 +68,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	}
 
 	/**
-	 * Remove object in database via DELETE method
+	 * Remove objeto por ID no banco de dados via método DELETE.
 	 * 
 	 * @param id
 	 * @return
@@ -78,15 +78,32 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
-	public T remove(HttpServletRequest request, HttpServletResponse response, @PathVariable(value = "id") ID id)
+	public T removeById(HttpServletRequest request, HttpServletResponse response, @PathVariable(value = "id") String id)
 			throws Exception {
-		T result = getService().findOne(id);
+		ID castID = (ID) id;
+		T result = getService().findOne(castID);
 		getService().remove(result);
 		return result;
 	}
+	
+	/**
+	 *  Remove objeto no banco de dados via método DELETE.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/", method = RequestMethod.DELETE)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
+	public void remove(HttpServletRequest request, HttpServletResponse response, @RequestBody T object)
+			throws Exception {
+		getService().remove(object);
+	}
 
 	/**
-	 * Get object in database via GET method
+	 * Retorna objeto do banco de dados via método GET.
 	 * 
 	 * @param id
 	 * @return
@@ -96,12 +113,17 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public T findOne(HttpServletRequest request, HttpServletResponse response, @PathVariable(value = "id") ID id)
+	public T findOne(HttpServletRequest request, HttpServletResponse response, @PathVariable(value = "id") String id)
 			throws Exception {
-		return getService().findOne(id);
+		ID castID = (ID) id;
+		return getService().findOne(castID);
 	}
 
-	@RequestMapping(value = "/findAll", method = RequestMethod.GET)
+	/**
+	 * Retorna todos os objetos do banco de dados via método GET.
+	 * @return
+	 */
+	@RequestMapping(value = {"/findAll","/"}, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
@@ -109,6 +131,12 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findAll();
 	}
 
+	/**
+	 * Retorna todos os objetos do banco de dados com paginação via método GET.
+	 * @param page
+	 * @param size
+	 * @return
+	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/findAllWithPage", params = { "page", "size" })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
