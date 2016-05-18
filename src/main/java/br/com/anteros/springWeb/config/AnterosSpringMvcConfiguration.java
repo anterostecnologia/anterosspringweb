@@ -70,6 +70,8 @@ public abstract class AnterosSpringMvcConfiguration extends WebMvcConfigurerAdap
 		}
 		appContext.setServletContext(servletContext);
 		servletContext.addListener(new ContextLoaderListener(appContext));
+		
+		addListener(servletContext);
 
 		Dynamic servlet = servletContext.addServlet(DISPATCHER, new DispatcherServlet(appContext));
 		servlet.addMapping("/");
