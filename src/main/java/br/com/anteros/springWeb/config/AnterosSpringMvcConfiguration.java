@@ -72,6 +72,7 @@ public abstract class AnterosSpringMvcConfiguration extends WebMvcConfigurerAdap
 		servletContext.addListener(new ContextLoaderListener(appContext));
 		
 		addListener(servletContext);
+		addServlet(servletContext, appContext);
 
 		Dynamic servlet = servletContext.addServlet(DISPATCHER, new DispatcherServlet(appContext));
 		servlet.addMapping("/");
@@ -95,6 +96,8 @@ public abstract class AnterosSpringMvcConfiguration extends WebMvcConfigurerAdap
 	public abstract Class<?> jsonDocConfigurationClass();
 
 	public abstract void addListener(ServletContext servletContext);
+	
+	public abstract void addServlet(ServletContext servletContext, AnnotationConfigWebApplicationContext appContext);
 
 	public abstract String getDisplayName();
 
