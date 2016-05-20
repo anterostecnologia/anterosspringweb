@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>br.com.anteros</groupId>
 	<artifactId>Anteros-Spring-Web</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 
 	<name>Anteros Spring Web</name>
 	<description>
@@ -110,13 +110,13 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
-			<version>4.0.6.RELEASE</version>
+			<version>4.2.0.RELEASE</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
-			<version>4.0.6.RELEASE</version>
+			<version>4.2.0.RELEASE</version>
 		</dependency>
 
 		<dependency>
