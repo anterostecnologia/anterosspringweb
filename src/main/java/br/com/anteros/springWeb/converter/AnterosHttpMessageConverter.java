@@ -24,8 +24,11 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 
+import br.com.anteros.persistence.dsl.osql.group.GroupExpression;
 import br.com.anteros.persistence.serialization.jackson.AnterosObjectMapper;
 import br.com.anteros.persistence.session.SQLSessionFactory;
+import br.com.anteros.persistence.session.query.filter.JacksonBase;
+
 
 /**
  * 
@@ -42,13 +45,19 @@ public class AnterosHttpMessageConverter extends MappingJackson2HttpMessageConve
 
 	public AnterosHttpMessageConverter(SQLSessionFactory sessionFactory) {
 		this.setSessionFactory(sessionFactory);
-		this.setObjectMapper(new AnterosObjectMapper(sessionFactory));
+		AnterosObjectMapper mapper = new AnterosObjectMapper(sessionFactory);
+		mapper.addMixInAnnotations(JacksonBase.class, JacksonBaseMixin.class);
+		mapper.addMixInAnnotations(GroupExpression.class, GroupExpressionMixin.class);		
+		this.setObjectMapper(mapper);
 	}
 
 	@Autowired
 	public void setSessionFactory(SQLSessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		this.setObjectMapper(new AnterosObjectMapper(sessionFactory));
+		AnterosObjectMapper mapper = new AnterosObjectMapper(sessionFactory);
+		mapper.addMixInAnnotations(JacksonBase.class, JacksonBaseMixin.class);
+		mapper.addMixInAnnotations(GroupExpression.class, GroupExpressionMixin.class);	
+		this.setObjectMapper(mapper);
 	}
 
 	public SQLSessionFactory getSessionFactory() {

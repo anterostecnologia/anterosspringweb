@@ -34,17 +34,20 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
+import br.com.anteros.persistence.session.query.filter.Filter;
 import br.com.anteros.persistence.session.repository.Page;
 import br.com.anteros.persistence.session.repository.PageRequest;
 import br.com.anteros.persistence.session.service.SQLService;
 
 /**
  * Classe base para uso de serviços REST de persistência usando Anteros.
- *  
+ * 
  * @author Edson Martins edsonmartins2005@gmail.com
  *
- * @param <T> Tipo
- * @param <ID> ID
+ * @param <T>
+ *            Tipo
+ * @param <ID>
+ *            ID
  */
 @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
 @SuppressWarnings("unchecked")
@@ -53,7 +56,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLRestController.class.getName());
 
 	/**
-	 * Insere ou atualiza objeto no banco de dados  via método POST ou PUT.;
+	 * Insere ou atualiza objeto no banco de dados via método POST ou PUT.;
 	 * 
 	 * @param id
 	 * @return
@@ -85,21 +88,13 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		getService().remove(result);
 		return result;
 	}
-	
-	/**
-	 *  Remove objeto no banco de dados via método DELETE.
-	 * 
-	 * @param id
-	 * @return
-	 * @throws Exception
-	 */
+
 	@RequestMapping(value = "/", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
-	public void remove(HttpServletRequest request, HttpServletResponse response, @RequestBody T object)
-			throws Exception {
-		getService().remove(object);
+	public Boolean deleteAll(@RequestParam(required=true) List<String> ids) throws Exception {
+		return true;
 	}
 
 	/**
@@ -120,24 +115,13 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	}
 
 	/**
-	 * Retorna todos os objetos do banco de dados via método GET.
-	 * @return
-	 */
-	@RequestMapping(value = {"/findAll","/"}, method = RequestMethod.GET)
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public List<T> findAll() {
-		return getService().findAll();
-	}
-
-	/**
 	 * Retorna todos os objetos do banco de dados com paginação via método GET.
+	 * 
 	 * @param page
 	 * @param size
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/findAllWithPage", params = { "page", "size" })
+	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size" })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
@@ -146,55 +130,28 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findAll(pageRequest);
 	}
 
-	@RequestMapping(value = "/find/{sql}", method = RequestMethod.GET)
+	@RequestMapping(method = RequestMethod.GET, value = "/findAll")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public List<T> find(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable(value = "sql") String sql) throws Exception {
-		return getService().find(sql);
+	public List<T> findAll(@RequestParam(required=true) List<String> ids) {
+		return null;
 	}
 
-	@RequestMapping(value = "/findWithPage/{sql}", params = { "page", "size" }, method = RequestMethod.GET)
+	@RequestMapping(value = "/findWithFilter", params = { "page", "size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public Page<T> find(@PathVariable("sql") String sql, @RequestParam(value = "page", required = true) int page,
+	public Page<T> find(@RequestBody Filter filter, @RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().find(sql, pageRequest);
+		return getService().find("", pageRequest);
 	}
 
-	@RequestMapping(method = RequestMethod.GET, value = "/findWithParameters/{sql}", params = { "parameters" })
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public List<T> find(@PathVariable String sql,
-			@RequestParam(value = "parameters", required = true) Object... parameters) {
-		return getService().find(sql, parameters);
-	}
-
-	@RequestMapping(method = RequestMethod.GET, value = "/findWithParametersAndPage/{sql}", params = { "page", "size",
-			"parameters" })
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public Page<T> find(@PathVariable("sql") String sql, @RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size,
-			@RequestParam(value = "parameters", required = true) Object... parameters) {
-		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().find(sql, parameters, pageRequest);
-	}
-
-	@RequestMapping(value = "/findByNamedQuery/{queryName}", method = RequestMethod.GET)
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public List<T> findByNamedQuery(@PathVariable("queryName") String queryName) {
-		return getService().findByNamedQuery(queryName);
-	}
-
-	@RequestMapping(value = "/findByNamedQueryWithPage/{queryName}", params = { "page", "size" }, method = RequestMethod.GET)
+	/**
+	 * Queries nomeadas
+	 */
+	@RequestMapping(value = "/findByNamedQuery/{queryName}", params = { "page", "size" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
@@ -205,26 +162,47 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findByNamedQuery(queryName, pageRequest);
 	}
 
-	@RequestMapping(value = "/findByNamedQueryWithParameters/{queryName}", params = { "parameters" }, method = RequestMethod.GET)
+	@RequestMapping(value = "/findByNamedQueryWithFilter/{queryName}", params = { "page",
+			"size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public List<T> findByNamedQuery(@PathVariable("queryName") String queryName,
-			@RequestParam(value = "parameters", required = true) Object... parameters) {
-		return getService().findByNamedQuery(queryName, parameters);
+	public Page<T> findByNamedQuery(@RequestBody Filter filter, @PathVariable("queryName") String queryName,
+			@RequestParam(value = "page", required = true) int page,
+			@RequestParam(value = "size", required = true) int size) {
+		PageRequest pageRequest = new PageRequest(page, size);
+		return getService().findByNamedQuery(queryName, pageRequest);
 	}
 
-	@RequestMapping(value = "/findByNamedQueryWithParamsAndPage/{queryName}", params = { "page", "size", "parameters" }, method = RequestMethod.GET)
+	@RequestMapping(value = "/findByNamedQueryWithParams/{queryName}", params = { "page", "size",
+			"parameters" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
 	public Page<T> findByNamedQuery(@PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size,
-			@RequestParam(value = "parameters", required = true) Object... parameters) {
+			@RequestParam(value = "parameters", required = true) List<String> parameters) {
 		PageRequest pageRequest = new PageRequest(page, size);
 		return getService().findByNamedQuery(queryName, parameters, pageRequest);
 	}
+
+	@RequestMapping(value = "/findByNamedQueryWithParamsAndFilter/{queryName}", params = { "page", "size",
+			"parameters" }, method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	public Page<T> findByNamedQuery(@RequestBody Filter filter, @PathVariable("queryName") String queryName,
+			@RequestParam(value = "page", required = true) int page,
+			@RequestParam(value = "size", required = true) int size,
+			@RequestParam(value = "parameters", required = true) List<String> parameters) {
+		PageRequest pageRequest = new PageRequest(page, size);
+		return getService().findByNamedQuery(queryName, parameters, pageRequest);
+	}
+
+	/**
+	 * Count
+	 */
 
 	@RequestMapping(value = "/count", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
@@ -232,6 +210,22 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
 	public long count() {
 		return getService().count();
+	}
+
+	@RequestMapping(value = "/exists/{id}", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	public boolean exists(@PathVariable String id) {
+		return getService().count()>0;
+	}
+	
+	@RequestMapping(value = "/exists", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	public boolean exists(@RequestParam(required=true) List<String> id) {
+		return getService().count()>0;
 	}
 
 	/**
