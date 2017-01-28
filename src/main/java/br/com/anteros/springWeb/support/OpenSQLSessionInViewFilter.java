@@ -16,6 +16,8 @@
 package br.com.anteros.springWeb.support;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Enumeration;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -38,7 +40,6 @@ import br.com.anteros.persistence.session.SQLSessionFactory;
 import br.com.anteros.spring.transaction.SQLSessionFactoryUtils;
 import br.com.anteros.spring.transaction.SQLSessionHolder;
 
-
 /**
  * 
  * @author Edson Martins edsonmartins2005@gmail.com
@@ -48,8 +49,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 
 	public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactory";
 
-    private static Logger LOG = LoggerProvider.getInstance().getLogger(OpenSQLSessionInViewFilter.class);
-    
+	private static Logger LOG = LoggerProvider.getInstance().getLogger(OpenSQLSessionInViewFilter.class);
+
 	private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
 
 	private boolean singleSession = true;
@@ -81,8 +82,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(
-			HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
@@ -94,8 +94,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		if (isSingleSession()) {
 			if (TransactionSynchronizationManager.hasResource(sessionFactory)) {
 				participate = true;
-			}
-			else {
+			} else {
 				boolean isFirstRequest = !isAsyncDispatch(request);
 				if (isFirstRequest || !applySessionBindingInterceptor(asyncManager, key)) {
 					logger.debug("Opening single Anteros SQLSession in OpenSQLSessionInViewFilter");
@@ -108,13 +107,11 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 					asyncManager.registerDeferredResultInterceptor(key, interceptor);
 				}
 			}
-		}
-		else {
+		} else {
 			Assert.state(!isAsyncStarted(request), "Deferred close mode is not supported on async dispatches");
 			if (SQLSessionFactoryUtils.isDeferredCloseActive(sessionFactory)) {
 				participate = true;
-			}
-			else {
+			} else {
 				SQLSessionFactoryUtils.initDeferredClose(sessionFactory);
 			}
 		}
@@ -122,19 +119,27 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		try {
 			LOG.debug("Before execute doFilter");
 			filterChain.doFilter(request, response);
+
+			Collection<String> hds = response.getHeaderNames();
+			for (String headerName : hds) {
+				String value = response.getHeader(headerName);
+				System.out.print(headerName + " = ");
+				System.out.print(value);
+				System.out.println();
+
+			}
+
 			LOG.debug("After execute doFilter");
-		}
-		finally {
+		} finally {
 			if (!participate) {
 				if (isSingleSession()) {
-					SQLSessionHolder sessionHolder =
-							(SQLSessionHolder) TransactionSynchronizationManager.unbindResource(sessionFactory);
+					SQLSessionHolder sessionHolder = (SQLSessionHolder) TransactionSynchronizationManager
+							.unbindResource(sessionFactory);
 					if (!isAsyncStarted(request)) {
 						logger.debug("Closing single Anteros SQLSession in OpenSQLSessionInViewFilter");
 						closeSession(sessionHolder.getSession(), sessionFactory);
 					}
-				}
-				else {
+				} else {
 					SQLSessionFactoryUtils.processDeferredClose(sessionFactory);
 				}
 			}
@@ -147,7 +152,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 
 	protected SQLSessionFactory lookupSessionFactory() {
 		if (logger.isDebugEnabled()) {
-			logger.debug("Using SQLSessionFactory '" + getSessionFactoryBeanName() + "' for OpenSQLSessionInViewFilter");
+			logger.debug(
+					"Using SQLSessionFactory '" + getSessionFactoryBeanName() + "' for OpenSQLSessionInViewFilter");
 		}
 		WebApplicationContext wac = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
 		return wac.getBean(getSessionFactoryBeanName(), SQLSessionFactory.class);
