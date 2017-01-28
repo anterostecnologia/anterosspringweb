@@ -121,14 +121,6 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 			filterChain.doFilter(request, response);
 
 			Collection<String> hds = response.getHeaderNames();
-			for (String headerName : hds) {
-				String value = response.getHeader(headerName);
-				System.out.print(headerName + " = ");
-				System.out.print(value);
-				System.out.println();
-
-			}
-
 			LOG.debug("After execute doFilter");
 		} finally {
 			if (!participate) {
