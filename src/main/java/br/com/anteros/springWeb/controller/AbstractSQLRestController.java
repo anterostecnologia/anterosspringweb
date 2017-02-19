@@ -57,19 +57,19 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 
 	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLRestController.class.getName());
 
+
 	/**
 	 * Insere ou atualiza um objeto.
-	 * 
-	 * @param id
-	 *            Identificador do objeto
-	 * @return Obejto salvo.
+	 * @param object Objeto a ser salvo
+	 * @return Objeto salvo
 	 * @throws Exception
 	 */
+	
 	@RequestMapping(value = "/", method = { RequestMethod.POST, RequestMethod.PUT })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
-	public T save(HttpServletRequest request, HttpServletResponse response, @RequestBody T object) throws Exception {
+	public T save(@RequestBody T object) throws Exception {
 		return getService().save(object);
 	}
 
@@ -85,7 +85,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
-	public T removeById(HttpServletRequest request, HttpServletResponse response, @PathVariable(value = "id") String id)
+	public T removeById(@PathVariable(value = "id") String id)
 			throws Exception {
 		ID castID = (ID) id;
 		T result = getService().findOne(castID);
@@ -126,7 +126,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public T findOne(HttpServletRequest request, HttpServletResponse response, @PathVariable(value = "id") String id)
+	public T findOne(@PathVariable(value = "id") String id)
 			throws Exception {
 		ID castID = (ID) id;
 		return getService().findOne(castID);
