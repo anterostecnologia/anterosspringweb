@@ -330,8 +330,8 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	/**
 	 * Verifica a existência dos objetos contidos na lista.
 	 * 
-	 * @param id
-	 * @return
+	 * @param ids Lista de id's para verificar a existência.
+	 * @return Verdadeiro se existir algum id.
 	 */
 	@RequestMapping(value = "/exists", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
