@@ -19,9 +19,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +32,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
-import br.com.anteros.persistence.dsl.osql.OSQLQuery;
 import br.com.anteros.persistence.session.query.filter.Filter;
 import br.com.anteros.persistence.session.repository.Page;
 import br.com.anteros.persistence.session.repository.PageRequest;
@@ -270,7 +266,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	}
 
 	/**
-	 * Busca os objetos da classe usando um consulta nomeada de acordo com os
+	 * Busca os objetos da classe usando uma consulta nomeada de acordo com os
 	 * parâmetros e filtro.
 	 * 
 	 * @param filter
