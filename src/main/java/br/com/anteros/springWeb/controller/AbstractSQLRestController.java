@@ -16,6 +16,7 @@
 package br.com.anteros.springWeb.controller;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
+import br.com.anteros.persistence.dsl.osql.OSQLQuery;
 import br.com.anteros.persistence.session.query.filter.Filter;
 import br.com.anteros.persistence.session.repository.Page;
 import br.com.anteros.persistence.session.repository.PageRequest;
@@ -56,10 +58,11 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLRestController.class.getName());
 
 	/**
-	 * Insere ou atualiza objeto no banco de dados via método POST ou PUT.;
+	 * Insere ou atualiza um objeto.
 	 * 
 	 * @param id
-	 * @return
+	 *            Identificador do objeto
+	 * @return Obejto salvo.
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/", method = { RequestMethod.POST, RequestMethod.PUT })
@@ -71,10 +74,11 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	}
 
 	/**
-	 * Remove objeto por ID no banco de dados via método DELETE.
+	 * Remove um objeto pelo ID.
 	 * 
 	 * @param id
-	 * @return
+	 *            Identificador do objeto
+	 * @return Objeto removido.
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
@@ -89,19 +93,33 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return result;
 	}
 
+	/**
+	 * Remove todos os objetos da classe.
+	 * 
+	 * @param ids
+	 *            Lista dos id's a serem removidos.
+	 * @return Verdadeiro se removeu todos.
+	 * @throws Exception
+	 */
 	@RequestMapping(value = "/", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
-	public Boolean deleteAll(@RequestParam(required=true) List<String> ids) throws Exception {
-		return true;
+	public Boolean removeAll(@RequestParam(required = true) List<String> ids) throws Exception {
+		List<ID> newIds = new ArrayList<ID>();
+		for (String id : ids) {
+			ID castID = (ID) id;
+			newIds.add(castID);
+		}
+		return getService().removeAll(newIds);
 	}
 
 	/**
-	 * Retorna objeto do banco de dados via método GET.
+	 * Busca um objeto pelo seu ID.
 	 * 
 	 * @param id
-	 * @return
+	 *            Identificador do objeto.
+	 * @return Objeto encontrado.
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
@@ -115,11 +133,13 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	}
 
 	/**
-	 * Retorna todos os objetos do banco de dados com paginação via método GET.
+	 * Busca os objetos da classe com paginação.
 	 * 
 	 * @param page
+	 *            Número da página
 	 * @param size
-	 * @return
+	 *            Tamanho da página
+	 * @return Página
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size" })
 	@ResponseStatus(HttpStatus.OK)
@@ -130,14 +150,37 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findAll(pageRequest);
 	}
 
+	/**
+	 * Busca os objetos da classe contido na lista de ID's.
+	 * 
+	 * @param ids
+	 *            Lista de ID's
+	 * @return Lista de objetos encontrados.
+	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/findAll")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public List<T> findAll(@RequestParam(required=true) List<String> ids) {
-		return null;
+	public List<T> findAll(@RequestParam(required = true) List<String> ids) {
+		List<ID> newIds = new ArrayList<ID>();
+		for (String id : ids) {
+			ID castID = (ID) id;
+			newIds.add(castID);
+		}
+		return getService().findAll(newIds);
 	}
 
+	/**
+	 * Busca os objetos da classe de acordo com o objeto filtro.
+	 * 
+	 * @param filter
+	 *            Objeto filtro
+	 * @param page
+	 *            Número da página
+	 * @param size
+	 *            Tamanho da página
+	 * @return Página
+	 */
 	@RequestMapping(value = "/findWithFilter", params = { "page", "size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
@@ -151,6 +194,18 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	/**
 	 * Queries nomeadas
 	 */
+
+	/**
+	 * Busca os objetos da classe usando uma consulta nomeada.
+	 * 
+	 * @param queryName
+	 *            Nome da consulta
+	 * @param page
+	 *            Número da página
+	 * @param size
+	 *            Tamanho da página
+	 * @return Página
+	 */
 	@RequestMapping(value = "/findByNamedQuery/{queryName}", params = { "page", "size" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
@@ -162,6 +217,19 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findByNamedQuery(queryName, pageRequest);
 	}
 
+	/**
+	 * Busca os objetos da classe usando uma consulta nomeada e um filtro.
+	 * 
+	 * @param filter
+	 *            Objeto filtro
+	 * @param queryName
+	 *            Nome da consulta
+	 * @param page
+	 *            Número da página
+	 * @param size
+	 *            Tamanho da página
+	 * @return Página
+	 */
 	@RequestMapping(value = "/findByNamedQueryWithFilter/{queryName}", params = { "page",
 			"size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
@@ -174,6 +242,20 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findByNamedQuery(queryName, pageRequest);
 	}
 
+	/**
+	 * Busca os objetos da classe usando uma consulta nomeada de acordo com os
+	 * parâmetros.
+	 * 
+	 * @param queryName
+	 *            Nome da consulta
+	 * @param page
+	 *            Número da página
+	 * @param size
+	 *            Tamanho da página
+	 * @param parameters
+	 *            Lista de parâmetros
+	 * @return Página
+	 */
 	@RequestMapping(value = "/findByNamedQueryWithParams/{queryName}", params = { "page", "size",
 			"parameters" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
@@ -187,6 +269,22 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().findByNamedQuery(queryName, parameters, pageRequest);
 	}
 
+	/**
+	 * Busca os objetos da classe usando um consulta nomeada de acordo com os
+	 * parâmetros e filtro.
+	 * 
+	 * @param filter
+	 *            Objeto filtro
+	 * @param queryName
+	 *            Nome da consulta
+	 * @param page
+	 *            Número da página
+	 * @param size
+	 *            Tamanho da página
+	 * @param parameters
+	 *            Lista de parâmetros
+	 * @return Página
+	 */
 	@RequestMapping(value = "/findByNamedQueryWithParamsAndFilter/{queryName}", params = { "page", "size",
 			"parameters" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
@@ -204,6 +302,11 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	 * Count
 	 */
 
+	/**
+	 * Retorna a quantidade de objetos da classe.
+	 * 
+	 * @return Número total de objetos
+	 */
 	@RequestMapping(value = "/count", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
@@ -212,20 +315,39 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 		return getService().count();
 	}
 
+	/**
+	 * Verifica a existência de um objeto com o ID.
+	 * 
+	 * @param id
+	 *            Id do objeto
+	 * @return Verdadeiro se existir.
+	 */
 	@RequestMapping(value = "/exists/{id}", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
 	public boolean exists(@PathVariable String id) {
-		return getService().count()>0;
+		ID castID = (ID) id;
+		return getService().exists(castID);
 	}
-	
+
+	/**
+	 * Verifica a existência dos objetos contidos na lista.
+	 * 
+	 * @param id
+	 * @return
+	 */
 	@RequestMapping(value = "/exists", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public boolean exists(@RequestParam(required=true) List<String> id) {
-		return getService().count()>0;
+	public boolean exists(@RequestParam(required = true) List<String> ids) {
+		List<ID> newIds = new ArrayList<ID>();
+		for (String id : ids) {
+			ID castID = (ID) id;
+			newIds.add(castID);
+		}
+		return getService().exists(newIds);
 	}
 
 	/**
