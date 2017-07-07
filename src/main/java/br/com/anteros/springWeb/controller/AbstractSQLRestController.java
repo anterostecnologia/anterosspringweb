@@ -32,7 +32,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
+import br.com.anteros.persistence.session.query.filter.AnterosFilterDsl;
 import br.com.anteros.persistence.session.query.filter.Filter;
+import br.com.anteros.persistence.session.query.filter.FilterException;
 import br.com.anteros.persistence.session.repository.Page;
 import br.com.anteros.persistence.session.repository.PageRequest;
 import br.com.anteros.persistence.session.service.SQLService;
@@ -176,15 +178,16 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	 * @param size
 	 *            Tamanho da página
 	 * @return Página
+	 * @throws Exception 
 	 */
 	@RequestMapping(value = "/findWithFilter", params = { "page", "size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
 	public Page<T> find(@RequestBody Filter filter, @RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size) {
+			@RequestParam(value = "size", required = true) int size) throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().find("", pageRequest);
+			return getService().find(AnterosFilterDsl.toSql(filter), pageRequest);
 	}
 
 	/**
