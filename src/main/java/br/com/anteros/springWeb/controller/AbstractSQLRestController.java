@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
 import br.com.anteros.core.utils.Assert;
+import br.com.anteros.core.utils.StringUtils;
 import br.com.anteros.persistence.session.exception.SQLSessionException;
 import br.com.anteros.persistence.session.query.filter.AnterosFilterDsl;
 import br.com.anteros.persistence.session.query.filter.DefaultFilterBuilder;
@@ -188,12 +189,13 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	public Page<T> find(@RequestBody Filter filter, @RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
-		
+
 		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
-		
-		return getService().find(
-				"select * from " + getService().getTableName() + " where " + builder.toSql(filter)+" ORDER BY "+builder.toSortSql(filter),
-				builder.getParams(), pageRequest);
+
+		String sort = builder.toSortSql(filter);
+
+		return getService().find("select * from " + getService().getTableName() + " where " + builder.toSql(filter)
+				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest);
 	}
 
 	/**
@@ -244,16 +246,18 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();		
+		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
 		Assert.notNull(queryName, "O nome da query não pode ser nulo.");
 		String query;
-		Page<T> result=null;
+		Page<T> result = null;
 		try {
-			query = getService().getNamedQuery(queryName).getQuery()+" WHERE "+builder.toSql(filter)+" ORDER BY "+builder.toSortSql(filter);
-			result =  getService().find(query,builder.getParams(),pageRequest);
+			String sort = builder.toSortSql(filter);
+			query = getService().getNamedQuery(queryName).getQuery() + " WHERE " + builder.toSql(filter) + (StringUtils.isNotEmpty(sort)?" ORDER BY "+sort:"")
+					+ builder.toSortSql(filter);
+			result = getService().find(query, builder.getParams(), pageRequest);
 		} catch (Exception e) {
-			throw new SQLSessionException("Não foi possível executar a query nomeada "+queryName,e);
-		}		
+			throw new SQLSessionException("Não foi possível executar a query nomeada " + queryName, e);
+		}
 		return result;
 	}
 
