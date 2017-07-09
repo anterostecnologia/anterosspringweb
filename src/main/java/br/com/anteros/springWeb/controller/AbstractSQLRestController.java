@@ -32,9 +32,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
+import br.com.anteros.core.utils.Assert;
+import br.com.anteros.persistence.session.exception.SQLSessionException;
 import br.com.anteros.persistence.session.query.filter.AnterosFilterDsl;
+import br.com.anteros.persistence.session.query.filter.DefaultFilterBuilder;
 import br.com.anteros.persistence.session.query.filter.Filter;
-import br.com.anteros.persistence.session.query.filter.FilterException;
 import br.com.anteros.persistence.session.repository.Page;
 import br.com.anteros.persistence.session.repository.PageRequest;
 import br.com.anteros.persistence.session.service.SQLService;
@@ -55,14 +57,15 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 
 	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLRestController.class.getName());
 
-
 	/**
 	 * Insere ou atualiza um objeto.
-	 * @param object Objeto a ser salvo
+	 * 
+	 * @param object
+	 *            Objeto a ser salvo
 	 * @return Objeto salvo
 	 * @throws Exception
 	 */
-	
+
 	@RequestMapping(value = "/", method = { RequestMethod.POST, RequestMethod.PUT })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
@@ -83,8 +86,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
-	public T removeById(@PathVariable(value = "id") String id)
-			throws Exception {
+	public T removeById(@PathVariable(value = "id") String id) throws Exception {
 		ID castID = (ID) id;
 		T result = getService().findOne(castID);
 		getService().remove(result);
@@ -124,8 +126,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
-	public T findOne(@PathVariable(value = "id") String id)
-			throws Exception {
+	public T findOne(@PathVariable(value = "id") String id) throws Exception {
 		ID castID = (ID) id;
 		return getService().findOne(castID);
 	}
@@ -178,7 +179,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	 * @param size
 	 *            Tamanho da página
 	 * @return Página
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@RequestMapping(value = "/findWithFilter", params = { "page", "size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
@@ -187,7 +188,12 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	public Page<T> find(@RequestBody Filter filter, @RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
-			return getService().find(AnterosFilterDsl.toSql(filter), pageRequest);
+		
+		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
+		
+		return getService().find(
+				"select * from " + getService().getTableName() + " where " + builder.toSql(filter)+" ORDER BY "+builder.toSortSql(filter),
+				builder.getParams(), pageRequest);
 	}
 
 	/**
@@ -238,7 +244,17 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, pageRequest);
+		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();		
+		Assert.notNull(queryName, "O nome da query não pode ser nulo.");
+		String query;
+		Page<T> result=null;
+		try {
+			query = getService().getNamedQuery(queryName).getQuery()+" WHERE "+builder.toSql(filter)+" ORDER BY "+builder.toSortSql(filter);
+			result =  getService().find(query,builder.getParams(),pageRequest);
+		} catch (Exception e) {
+			throw new SQLSessionException("Não foi possível executar a query nomeada "+queryName,e);
+		}		
+		return result;
 	}
 
 	/**
@@ -333,7 +349,8 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	/**
 	 * Verifica a existência dos objetos contidos na lista.
 	 * 
-	 * @param ids Lista de id's para verificar a existência.
+	 * @param ids
+	 *            Lista de id's para verificar a existência.
 	 * @return Verdadeiro se existir algum id.
 	 */
 	@RequestMapping(value = "/exists", method = RequestMethod.GET)
