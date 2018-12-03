@@ -47,7 +47,7 @@ import br.com.anteros.spring.transaction.SQLSessionHolder;
  */
 public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 
-	public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactory";
+	public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactorySQL";
 
 	private static Logger LOG = LoggerProvider.getInstance().getLogger(OpenSQLSessionInViewFilter.class);
 
