@@ -1,4 +1,4 @@
-package br.com.anteros.springWeb.config;
+package br.com.anteros.spring.web.config;
 
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
@@ -11,7 +11,7 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 
-import br.com.anteros.springWeb.support.OpenSQLSessionInViewFilter;
+import br.com.anteros.spring.web.support.OpenSQLSessionInViewFilter;
 
 public abstract class AbstractSpringWebAppInitializer implements WebApplicationInitializer{
 	

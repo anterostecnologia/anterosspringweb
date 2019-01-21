@@ -1,4 +1,4 @@
-package br.com.anteros.springWeb.resouce.messages;
+package br.com.anteros.spring.web.resource.messages;
 
 import java.text.MessageFormat;
 import java.util.Enumeration;
@@ -8,11 +8,11 @@ import java.util.Vector;
 
 import br.com.anteros.core.resource.messages.AnterosBundle;
 
-public class AnterosSpringWebMessages_ptBR implements AnterosBundle {
+public class AnterosSpringWebMessages implements AnterosBundle {
 
 	private final Map<String, String> messages = new HashMap<String, String>();
 
-	public AnterosSpringWebMessages_ptBR() {
+	public AnterosSpringWebMessages() {
 		messages.put("ToStringVisitor.operation_unknown", "Opera\u00e7\u00e3o desconhecida com estes argumentos {0}");
 
 		messages.put("NamedParameterParserResult.toString", "SQL-> {0} Par\u00e2metros: {1}");

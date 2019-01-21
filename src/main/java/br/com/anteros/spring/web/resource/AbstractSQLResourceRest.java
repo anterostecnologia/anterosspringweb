@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package br.com.anteros.springWeb.controller;
+package br.com.anteros.spring.web.resource;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -52,11 +52,11 @@ import br.com.anteros.persistence.session.service.SQLService;
  * @param <ID>
  *            ID
  */
-@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 @SuppressWarnings("unchecked")
-public abstract class AbstractSQLRestController<T, ID extends Serializable> {
+public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 
-	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLRestController.class.getName());
+	protected static Logger log = LoggerProvider.getInstance().getLogger(AbstractSQLResourceRest.class.getName());
 
 	/**
 	 * Insere ou atualiza um objeto.
@@ -70,7 +70,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/", method = { RequestMethod.POST, RequestMethod.PUT })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager="transactionManagerSQL")
 	public T save(@RequestBody T object) throws Exception {
 		return getService().save(object);
 	}
@@ -86,7 +86,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager="transactionManagerSQL")
 	public T removeById(@PathVariable(value = "id") String id) throws Exception {
 		ID castID = (ID) id;
 		T result = getService().findOne(castID);
@@ -105,7 +105,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/", method = RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager="transactionManagerSQL")
 	public Boolean removeAll(@RequestParam(required = true) List<String> ids) throws Exception {
 		List<ID> newIds = new ArrayList<ID>();
 		for (String id : ids) {
@@ -126,7 +126,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public T findOne(@PathVariable(value = "id") String id) throws Exception {
 		ID castID = (ID) id;
 		return getService().findOne(castID);
@@ -144,7 +144,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size" })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size) {
 		PageRequest pageRequest = new PageRequest(page, size);
 		return getService().findAll(pageRequest);
@@ -160,7 +160,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(method = RequestMethod.GET, value = "/findAll")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public List<T> findAll(@RequestParam(required = true) List<String> ids) {
 		List<ID> newIds = new ArrayList<ID>();
 		for (String id : ids) {
@@ -185,7 +185,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/findWithFilter", params = { "page", "size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public Page<T> find(@RequestBody Filter filter, @RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
@@ -216,7 +216,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/findByNamedQuery/{queryName}", params = { "page", "size" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public Page<T> findByNamedQuery(@PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) {
@@ -241,7 +241,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 			"size" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public Page<T> findByNamedQuery(@RequestBody Filter filter, @PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size) {
@@ -279,7 +279,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 			"parameters" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public Page<T> findByNamedQuery(@PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size,
@@ -308,7 +308,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 			"parameters" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public Page<T> findByNamedQuery(@RequestBody Filter filter, @PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size,
@@ -329,7 +329,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/count", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public long count() {
 		return getService().count();
 	}
@@ -344,7 +344,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/exists/{id}", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public boolean exists(@PathVariable String id) {
 		ID castID = (ID) id;
 		return getService().exists(castID);
@@ -360,7 +360,7 @@ public abstract class AbstractSQLRestController<T, ID extends Serializable> {
 	@RequestMapping(value = "/exists", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true)
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager="transactionManagerSQL")
 	public boolean exists(@RequestParam(required = true) List<String> ids) {
 		List<ID> newIds = new ArrayList<ID>();
 		for (String id : ids) {

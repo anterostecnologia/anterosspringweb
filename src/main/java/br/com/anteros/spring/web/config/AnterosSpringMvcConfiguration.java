@@ -1,4 +1,4 @@
-package br.com.anteros.springWeb.config;
+package br.com.anteros.spring.web.config;
 
 import java.util.List;
 
@@ -25,8 +25,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 import br.com.anteros.persistence.session.SQLSessionFactory;
 import br.com.anteros.spring.transaction.AnterosTransactionManager;
-import br.com.anteros.springWeb.converter.AnterosHttpMessageConverter;
-import br.com.anteros.springWeb.support.OpenSQLSessionInViewFilter;
+import br.com.anteros.spring.web.converter.AnterosHttpMessageConverter;
+import br.com.anteros.spring.web.support.OpenSQLSessionInViewFilter;
 
 @Configuration
 @EnableTransactionManagement

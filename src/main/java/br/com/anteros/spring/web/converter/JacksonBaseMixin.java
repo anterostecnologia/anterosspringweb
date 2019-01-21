@@ -1,4 +1,4 @@
-package br.com.anteros.springWeb.converter;
+package br.com.anteros.spring.web.converter;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

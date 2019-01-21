@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package br.com.anteros.springWeb.support;
+package br.com.anteros.spring.web.support;
 
 import java.io.IOException;
 import java.util.Collection;
