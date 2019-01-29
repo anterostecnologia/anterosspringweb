@@ -18,6 +18,7 @@ public abstract class AbstractSpringWebAppInitializer implements WebApplicationI
 	private static final String SPRING_SECURITY_FILTER_CHAIN = "springSecurityFilterChain";
 	private static final String DISPATCHER = "dispatcher";
 	private static final String OPEN_SQL_SESSION_IN_VIEW_FILTER = "OpenSQLSessionInViewFilter";
+	private static final String ANTEROS_CORS_FILTER = "anterosCorsFilter";
 
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
@@ -70,6 +71,9 @@ public abstract class AbstractSpringWebAppInitializer implements WebApplicationI
 		Dynamic servlet = servletContext.addServlet(DISPATCHER, new DispatcherServlet(appContext));
 		servlet.addMapping("/");
 		servlet.setLoadOnStartup(1);
+		
+		FilterRegistration.Dynamic filter = servletContext.addFilter(ANTEROS_CORS_FILTER, AnterosCorsFilter.class);
+		filter.addMappingForUrlPatterns(null, false, "/*");
 		
 		FilterRegistration.Dynamic openSQLSessionInViewFilterChain = servletContext.addFilter(OPEN_SQL_SESSION_IN_VIEW_FILTER,
 				OpenSQLSessionInViewFilter.class);
