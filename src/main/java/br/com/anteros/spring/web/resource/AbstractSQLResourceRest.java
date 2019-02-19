@@ -88,10 +88,14 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager="transactionManagerSQL")
 	public T removeById(@PathVariable(value = "id") String id) throws Exception {
-		ID castID = (ID) id;
-		T result = getService().findOne(castID);
-		getService().remove(result);
-		return result;
+		throw new SQLSessionException("ID " + id+" não foi encontrado.");
+//		ID castID = (ID) id;
+//		T result = getService().findOne(castID);
+//		if (result==null) {
+//			throw new SQLSessionException("ID " + id+" não foi encontrado.");
+//		}
+//		getService().remove(result);
+//		return result;
 	}
 
 	/**
