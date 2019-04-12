@@ -72,6 +72,22 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	public T save(@RequestBody T object) throws Exception {
 		return getService().save(object);
 	}
+	
+	/**
+	 * Valida um objeto.
+	 * 
+	 * @param object Objeto a ser validado
+	 * @return Objeto validado
+	 * @throws Exception
+	 */
+
+	@RequestMapping(value = "/validate", method = { RequestMethod.POST, RequestMethod.PUT })
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager = "transactionManagerSQL")
+	public void validate(@RequestBody T object) throws Exception {
+		getService().validate(object);
+	}
 
 	/**
 	 * Remove um objeto pelo ID.
@@ -184,9 +200,11 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 
 		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
 
-		String sort = builder.toSortSql(filter);
+		String sort = builder.toSortSql(filter, getService().getSession(), getService().getResultClass());
+		
+		String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
 
-		return getService().find("select * from " + getService().getTableName() + " where " + builder.toSql(filter)
+		return getService().find("select * from " + getService().getTableName() + " where " + sql
 				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest);
 	}
 
@@ -262,9 +280,10 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		String query;
 		Page<T> result = null;
 		try {
-			String sort = builder.toSortSql(filter);
-			query = getService().getNamedQuery(queryName).getQuery() + " WHERE " + builder.toSql(filter)
-					+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : "") + builder.toSortSql(filter);
+			String sort = builder.toSortSql(filter, getService().getSession(), getService().getResultClass());
+			String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
+			query = getService().getNamedQuery(queryName).getQuery() + " WHERE " + sql
+					+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : "") + sort;
 			result = getService().find(query, builder.getParams(), pageRequest);
 		} catch (Exception e) {
 			throw new SQLSessionException("Não foi possível executar a query nomeada " + queryName, e);
