@@ -90,6 +90,23 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	}
 
 	/**
+	 * Valida um objeto.
+	 * 
+	 * @param object Objeto a ser validado
+	 * @param groups Grupo de validação
+	 * @return Objeto validado
+	 * @throws Exception
+	 */
+	
+	@RequestMapping(value = "/validateGroup", method = { RequestMethod.POST, RequestMethod.PUT })
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager = "transactionManagerSQL")
+	public void validateGroup(@RequestBody T object, Class<?>... groups) throws Exception {
+		getService().validate(object, groups);
+	}
+
+	/**
 	 * Remove um objeto pelo ID.
 	 * 
 	 * @param id Identificador do objeto
