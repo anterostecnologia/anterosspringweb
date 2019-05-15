@@ -34,9 +34,14 @@ import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
 import br.com.anteros.core.utils.Assert;
 import br.com.anteros.core.utils.StringUtils;
+import br.com.anteros.persistence.dsl.osql.DynamicEntityPath;
+import br.com.anteros.persistence.dsl.osql.types.OrderSpecifier;
+import br.com.anteros.persistence.dsl.osql.types.Predicate;
+import br.com.anteros.persistence.metadata.EntityCache;
 import br.com.anteros.persistence.session.exception.SQLSessionException;
 import br.com.anteros.persistence.session.query.filter.AnterosFilterDsl;
 import br.com.anteros.persistence.session.query.filter.AnterosMultipleFieldsFilter;
+import br.com.anteros.persistence.session.query.filter.AnterosSortFieldsHelper;
 import br.com.anteros.persistence.session.query.filter.DefaultFilterBuilder;
 import br.com.anteros.persistence.session.query.filter.Filter;
 import br.com.anteros.persistence.session.repository.Page;
@@ -72,7 +77,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	public T save(@RequestBody T object) throws Exception {
 		return getService().save(object);
 	}
-	
+
 	/**
 	 * Valida um objeto.
 	 * 
@@ -97,7 +102,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Objeto validado
 	 * @throws Exception
 	 */
-	
+
 	@RequestMapping(value = "/validateGroup", method = { RequestMethod.POST, RequestMethod.PUT })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
@@ -180,6 +185,32 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	}
 
 	/**
+	 * Busca os objetos da classe com paginação e ordenado
+	 * 
+	 * @param page Número da página
+	 * @param size Tamanho da página
+	 * @param sort Campos para ordenação
+	 * @return Página
+	 */
+	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size", "sort" })
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
+	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size,
+			@RequestParam("sort") String sort) {
+		PageRequest pageRequest = new PageRequest(page, size);
+
+		Predicate predicate = null;
+
+		EntityCache[] entityCaches = getService().getSession().getEntityCacheManager()
+				.getEntitiesBySuperClassIncluding(getService().getResultClass());
+
+		List<OrderSpecifier> orderBy = AnterosSortFieldsHelper.convertFieldsToOrderby(getService().getSession(),
+				(DynamicEntityPath) this.getService().getEntityPath(), entityCaches, sort);
+		return getService().findAll(predicate, pageRequest, orderBy.toArray(new OrderSpecifier[] {}));
+	}
+
+	/**
 	 * Busca os objetos da classe contido na lista de ID's.
 	 * 
 	 * @param ids Lista de ID's
@@ -218,7 +249,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
 
 		String sort = builder.toSortSql(filter, getService().getSession(), getService().getResultClass());
-		
+
 		String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
 
 		return getService().find("select * from " + getService().getTableName() + " where " + sql
@@ -235,16 +266,16 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/findMultipleFields", params = { "filter", "fields", "page",
-			"size", "sort" }, method = RequestMethod.POST)
+	@RequestMapping(value = "/findMultipleFields", params = { "filter", "fields", "page", "size",
+			"sort" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> find(@RequestParam(value = "filter", required = true) String filter,
 			@RequestParam(value = "fields", required = true) String fields,
 			@RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size,
-			@RequestParam(value = "sort") String sort) throws Exception {
+			@RequestParam(value = "size", required = true) int size, @RequestParam(value = "sort") String sort)
+			throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
 
 		return new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession())
