@@ -84,7 +84,8 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-
+		
+		
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
 		boolean participate = false;
 
