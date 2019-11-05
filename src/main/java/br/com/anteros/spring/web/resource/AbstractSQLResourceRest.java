@@ -35,10 +35,16 @@ import br.com.anteros.core.log.LoggerProvider;
 import br.com.anteros.core.utils.Assert;
 import br.com.anteros.core.utils.StringUtils;
 import br.com.anteros.persistence.dsl.osql.DynamicEntityPath;
+import br.com.anteros.persistence.dsl.osql.support.Expressions;
+import br.com.anteros.persistence.dsl.osql.types.Ops;
 import br.com.anteros.persistence.dsl.osql.types.OrderSpecifier;
 import br.com.anteros.persistence.dsl.osql.types.Predicate;
+import br.com.anteros.persistence.dsl.osql.types.expr.params.DoubleParam;
+import br.com.anteros.persistence.dsl.osql.types.path.NumberPath;
 import br.com.anteros.persistence.metadata.EntityCache;
+import br.com.anteros.persistence.metadata.descriptor.DescriptionField;
 import br.com.anteros.persistence.session.exception.SQLSessionException;
+import br.com.anteros.persistence.session.query.SQLQueryException;
 import br.com.anteros.persistence.session.query.filter.AnterosFilterDsl;
 import br.com.anteros.persistence.session.query.filter.AnterosMultipleFieldsFilter;
 import br.com.anteros.persistence.session.query.filter.AnterosSortFieldsHelper;
@@ -251,6 +257,16 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		String sort = builder.toSortSql(filter, getService().getSession(), getService().getResultClass());
 
 		String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
+		
+		EntityCache entityCache = getService().getSession().getEntityCacheManager().getEntityCache(getService().getResultClass());
+		DescriptionField tenantId = entityCache.getTenantId();
+		
+		if (tenantId!=null) {
+			if (this.getService().getSession().getTenantId()==null) {
+				throw new SQLQueryException("Informe o Tenant ID para realizar consulta na entidade "+entityCache.getEntityClass().getName());
+			}
+			sql = sql + " AND "+tenantId.getSimpleColumn().getColumnName()+"="+'"'+getService().getSession().getTenantId()+'"';
+		}
 
 		return getService().find("select * from " + getService().getTableName() + " where " + sql
 				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest);
@@ -277,7 +293,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "size", required = true) int size, @RequestParam(value = "sort") String sort)
 			throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
-
+		
 		return new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession())
 				.resultClass(getService().getResultClass()).fieldsSort(sort).page(pageRequest).buildAndGetPage();
 	}
