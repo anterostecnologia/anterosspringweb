@@ -85,8 +85,9 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
-	    String tenantID = request.getHeader("x-tenant-id");    
-		LOG.info("Tenant ID: "+tenantID);
+	    String tenantID = request.getHeader("x-tenant-id");
+	    String companyID = request.getHeader("x-company-id");  
+		LOG.info("Tenant ID: "+tenantID+" Company ID: "+companyID);
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
 		boolean participate = false;
 
@@ -102,6 +103,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 					logger.debug("Opening single Anteros SQLSession in OpenSQLSessionInViewFilter");
 					SQLSession session = getSession(sessionFactory);
 					session.setTenantId(tenantID);
+					session.setCompanyId(companyID);
 					SQLSessionHolder sessionHolder = new SQLSessionHolder(session);
 					TransactionSynchronizationManager.bindResource(sessionFactory, sessionHolder);
 

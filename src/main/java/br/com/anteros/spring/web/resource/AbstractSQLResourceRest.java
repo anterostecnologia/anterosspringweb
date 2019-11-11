@@ -34,13 +34,17 @@ import br.com.anteros.core.log.Logger;
 import br.com.anteros.core.log.LoggerProvider;
 import br.com.anteros.core.utils.Assert;
 import br.com.anteros.core.utils.StringUtils;
+import br.com.anteros.persistence.dsl.osql.BooleanBuilder;
 import br.com.anteros.persistence.dsl.osql.DynamicEntityPath;
 import br.com.anteros.persistence.dsl.osql.support.Expressions;
 import br.com.anteros.persistence.dsl.osql.types.Ops;
 import br.com.anteros.persistence.dsl.osql.types.OrderSpecifier;
 import br.com.anteros.persistence.dsl.osql.types.Predicate;
+import br.com.anteros.persistence.dsl.osql.types.expr.BooleanExpression;
 import br.com.anteros.persistence.dsl.osql.types.expr.params.DoubleParam;
+import br.com.anteros.persistence.dsl.osql.types.expr.params.StringParam;
 import br.com.anteros.persistence.dsl.osql.types.path.NumberPath;
+import br.com.anteros.persistence.dsl.osql.types.path.StringPath;
 import br.com.anteros.persistence.metadata.EntityCache;
 import br.com.anteros.persistence.metadata.descriptor.DescriptionField;
 import br.com.anteros.persistence.session.exception.SQLSessionException;
@@ -206,14 +210,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam("sort") String sort) {
 		PageRequest pageRequest = new PageRequest(page, size);
 
-		Predicate predicate = null;
-
-		EntityCache[] entityCaches = getService().getSession().getEntityCacheManager()
-				.getEntitiesBySuperClassIncluding(getService().getResultClass());
+		BooleanBuilder builder = new BooleanBuilder();
+		EntityCache[] entityCaches = getService().getSession().getEntityCacheManager().getEntitiesBySuperClassIncluding(this.getService().getResultClass());
 
 		List<OrderSpecifier> orderBy = AnterosSortFieldsHelper.convertFieldsToOrderby(getService().getSession(),
 				(DynamicEntityPath) this.getService().getEntityPath(), entityCaches, sort);
-		return getService().findAll(predicate, pageRequest, orderBy.toArray(new OrderSpecifier[] {}));
+		return getService().findAll(builder, pageRequest, orderBy.toArray(new OrderSpecifier[] {}));
 	}
 
 	/**
