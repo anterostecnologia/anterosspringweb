@@ -92,6 +92,10 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		boolean participate = false;
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+		
+		WebApplicationContext springContext = 
+		        WebApplicationContextUtils.getWebApplicationContext(this.getServletContext());	
+		
 		String key = getAlreadyFilteredAttributeName();
 
 		if (isSingleSession()) {

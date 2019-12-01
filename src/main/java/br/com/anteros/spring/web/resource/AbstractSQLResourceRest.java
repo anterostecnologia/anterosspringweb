@@ -36,15 +36,7 @@ import br.com.anteros.core.utils.Assert;
 import br.com.anteros.core.utils.StringUtils;
 import br.com.anteros.persistence.dsl.osql.BooleanBuilder;
 import br.com.anteros.persistence.dsl.osql.DynamicEntityPath;
-import br.com.anteros.persistence.dsl.osql.support.Expressions;
-import br.com.anteros.persistence.dsl.osql.types.Ops;
 import br.com.anteros.persistence.dsl.osql.types.OrderSpecifier;
-import br.com.anteros.persistence.dsl.osql.types.Predicate;
-import br.com.anteros.persistence.dsl.osql.types.expr.BooleanExpression;
-import br.com.anteros.persistence.dsl.osql.types.expr.params.DoubleParam;
-import br.com.anteros.persistence.dsl.osql.types.expr.params.StringParam;
-import br.com.anteros.persistence.dsl.osql.types.path.NumberPath;
-import br.com.anteros.persistence.dsl.osql.types.path.StringPath;
 import br.com.anteros.persistence.metadata.EntityCache;
 import br.com.anteros.persistence.metadata.descriptor.DescriptionField;
 import br.com.anteros.persistence.session.exception.SQLSessionException;
@@ -134,7 +126,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = false, transactionManager = "transactionManagerSQL")
 	public T removeById(@PathVariable(value = "id") String id) throws Exception {
 		ID castID = (ID) id;
-		T result = getService().findOne(castID);
+		T result = getService().findOne(castID,null);
 		if (result == null) {
 			throw new SQLSessionException("ID " + id + " não foi encontrado.");
 		}
@@ -169,13 +161,13 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Objeto encontrado.
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+	@RequestMapping(value = "/{id}", params = { "fieldsToForceLazy" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
-	public T findOne(@PathVariable(value = "id") String id) throws Exception {
+	public T findOne(@PathVariable(value = "id") String id, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) throws Exception {
 		ID castID = (ID) id;
-		return getService().findOne(castID);
+		return getService().findOne(castID,fieldsToForceLazy);
 	}
 
 	/**
@@ -185,13 +177,13 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @param size Tamanho da página
 	 * @return Página
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size" })
+	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size", "fieldsToForceLazy" })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
-	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size) {
+	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findAll(pageRequest);
+		return getService().findAll(pageRequest, fieldsToForceLazy);
 	}
 
 	/**
@@ -202,12 +194,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @param sort Campos para ordenação
 	 * @return Página
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size", "sort" })
+	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "page", "size", "sort", "fieldsToForceLazy" })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size,
-			@RequestParam("sort") String sort) {
+			@RequestParam("sort") String sort, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
 
 		BooleanBuilder builder = new BooleanBuilder();
@@ -215,7 +207,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 
 		List<OrderSpecifier> orderBy = AnterosSortFieldsHelper.convertFieldsToOrderby(getService().getSession(),
 				(DynamicEntityPath) this.getService().getEntityPath(), entityCaches, sort);
-		return getService().findAll(builder, pageRequest, orderBy.toArray(new OrderSpecifier[] {}));
+		return getService().findAll(builder, pageRequest, fieldsToForceLazy, orderBy.toArray(new OrderSpecifier[] {}));
 	}
 
 	/**
@@ -224,17 +216,17 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @param ids Lista de ID's
 	 * @return Lista de objetos encontrados.
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/findAll")
+	@RequestMapping(method = RequestMethod.GET, value = "/findAll", params = { "fieldsToForceLazy" })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
-	public List<T> findAll(@RequestParam(required = true) List<String> ids) {
+	public List<T> findAll(@RequestParam(required = true) List<String> ids, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		List<ID> newIds = new ArrayList<ID>();
 		for (String id : ids) {
 			ID castID = (ID) id;
 			newIds.add(castID);
 		}
-		return getService().findAll(newIds);
+		return getService().findAll(newIds,fieldsToForceLazy);
 	}
 
 	/**
@@ -246,12 +238,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/findWithFilter", params = { "page", "size" }, method = RequestMethod.POST)
+	@RequestMapping(value = "/findWithFilter", params = { "page", "size","fieldsToForceLazy" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> find(@RequestBody Filter filter, @RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size) throws Exception {
+			@RequestParam(value = "size", required = true) int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
 
 		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
@@ -271,7 +263,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		}
 
 		return getService().find("select * from " + getService().getTableName() + " where " + sql
-				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest);
+				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest, fieldsToForceLazy);
 	}
 
 	/**
@@ -285,19 +277,20 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/findMultipleFields", params = { "filter", "fields", "page", "size",
-			"sort" }, method = RequestMethod.POST)
+			"sort","fieldsToForceLazy" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> find(@RequestParam(value = "filter", required = true) String filter,
 			@RequestParam(value = "fields", required = true) String fields,
 			@RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size, @RequestParam(value = "sort") String sort)
+			@RequestParam(value = "size", required = true) int size, @RequestParam(value = "sort") String sort,
+			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy)
 			throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
 		
 		return new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession())
-				.resultClass(getService().getResultClass()).fieldsSort(sort).page(pageRequest).buildAndGetPage();
+				.resultClass(getService().getResultClass()).fieldsSort(sort).page(pageRequest).fieldsToForceLazy(fieldsToForceLazy).buildAndGetPage();
 	}
 
 	/**
@@ -312,15 +305,15 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @param size      Tamanho da página
 	 * @return Página
 	 */
-	@RequestMapping(value = "/findByNamedQuery/{queryName}", params = { "page", "size" }, method = RequestMethod.GET)
+	@RequestMapping(value = "/findByNamedQuery/{queryName}", params = { "page", "size", "fieldsToForceLazy" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findByNamedQuery(@PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size) {
+			@RequestParam(value = "size", required = true) int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, pageRequest);
+		return getService().findByNamedQuery(queryName, pageRequest, fieldsToForceLazy);
 	}
 
 	/**
@@ -333,13 +326,13 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 */
 	@RequestMapping(value = "/findByNamedQueryWithFilter/{queryName}", params = { "page",
-			"size" }, method = RequestMethod.POST)
+			"size", "fieldsToForceLazy" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findByNamedQuery(@RequestBody Filter filter, @PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
-			@RequestParam(value = "size", required = true) int size) {
+			@RequestParam(value = "size", required = true) int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
 		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
 		Assert.notNull(queryName, "O nome da query não pode ser nulo.");
@@ -350,7 +343,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
 			query = getService().getNamedQuery(queryName).getQuery() + " WHERE " + sql
 					+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : "") + sort;
-			result = getService().find(query, builder.getParams(), pageRequest);
+			result = getService().find(query, builder.getParams(), pageRequest, fieldsToForceLazy);
 		} catch (Exception e) {
 			throw new SQLSessionException("Não foi possível executar a query nomeada " + queryName, e);
 		}
@@ -368,16 +361,17 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 */
 	@RequestMapping(value = "/findByNamedQueryWithParams/{queryName}", params = { "page", "size",
-			"parameters" }, method = RequestMethod.GET)
+			"parameters", "fieldsToForceLazy" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findByNamedQuery(@PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size,
-			@RequestParam(value = "parameters", required = true) List<String> parameters) {
+			@RequestParam(value = "parameters", required = true) List<String> parameters,
+			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, parameters, pageRequest);
+		return getService().findByNamedQuery(queryName, parameters, pageRequest, fieldsToForceLazy);
 	}
 
 	/**
@@ -392,16 +386,17 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 */
 	@RequestMapping(value = "/findByNamedQueryWithParamsAndFilter/{queryName}", params = { "page", "size",
-			"parameters" }, method = RequestMethod.POST)
+			"parameters","fieldsToForceLazy" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findByNamedQuery(@RequestBody Filter filter, @PathVariable("queryName") String queryName,
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size,
-			@RequestParam(value = "parameters", required = true) List<String> parameters) {
+			@RequestParam(value = "parameters", required = true) List<String> parameters,
+			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, parameters, pageRequest);
+		return getService().findByNamedQuery(queryName, parameters, pageRequest,fieldsToForceLazy);
 	}
 
 	/**
