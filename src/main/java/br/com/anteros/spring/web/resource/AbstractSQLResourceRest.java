@@ -183,7 +183,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findAll(pageRequest, fieldsToForceLazy);
+		Page<T> result = getService().findAll(pageRequest, fieldsToForceLazy);
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
 	}
 
 	/**
@@ -207,7 +212,16 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 
 		List<OrderSpecifier> orderBy = AnterosSortFieldsHelper.convertFieldsToOrderby(getService().getSession(),
 				(DynamicEntityPath) this.getService().getEntityPath(), entityCaches, sort);
-		return getService().findAll(builder, pageRequest, fieldsToForceLazy, orderBy.toArray(new OrderSpecifier[] {}));
+		Page<T> result = getService().findAll(builder, pageRequest, fieldsToForceLazy, orderBy.toArray(new OrderSpecifier[] {}));
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
+	}
+
+	protected Page<T> createConcretePage(List<T> content, PageRequest pageRequest, long totalElements){
+		return null;
 	}
 
 	/**
@@ -226,7 +240,16 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			ID castID = (ID) id;
 			newIds.add(castID);
 		}
-		return getService().findAll(newIds,fieldsToForceLazy);
+		List<T> result = getService().findAll(newIds,fieldsToForceLazy);
+		List<T> concreteList = this.createConcreteList(result);
+		if (concreteList!=null) {
+			return concreteList;
+		}
+		return result;
+	}
+
+	protected List<T> createConcreteList(List<T> result) {
+		return null;
 	}
 
 	/**
@@ -262,8 +285,13 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			sql = sql + " AND "+tenantId.getSimpleColumn().getColumnName()+"="+'"'+getService().getSession().getTenantId()+'"';
 		}
 
-		return getService().find("select * from " + getService().getTableName() + " where " + sql
+		Page<T> result = getService().find("select * from " + getService().getTableName() + " where " + sql
 				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest, fieldsToForceLazy);
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
 	}
 
 	/**
@@ -289,8 +317,13 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
 		
-		return new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession())
+		Page<T> result = new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession())
 				.resultClass(getService().getResultClass()).fieldsSort(sort).page(pageRequest).fieldsToForceLazy(fieldsToForceLazy).buildAndGetPage();
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
 	}
 
 	/**
@@ -313,7 +346,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, pageRequest, fieldsToForceLazy);
+		Page<T> result = getService().findByNamedQuery(queryName, pageRequest, fieldsToForceLazy);
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
 	}
 
 	/**
@@ -347,6 +385,10 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		} catch (Exception e) {
 			throw new SQLSessionException("Não foi possível executar a query nomeada " + queryName, e);
 		}
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
 		return result;
 	}
 
@@ -371,7 +413,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "parameters", required = true) List<String> parameters,
 			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, parameters, pageRequest, fieldsToForceLazy);
+		Page<T> result = getService().findByNamedQuery(queryName, parameters, pageRequest, fieldsToForceLazy);
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
 	}
 
 	/**
@@ -396,7 +443,12 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "parameters", required = true) List<String> parameters,
 			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		return getService().findByNamedQuery(queryName, parameters, pageRequest,fieldsToForceLazy);
+		Page<T> result = getService().findByNamedQuery(queryName, parameters, pageRequest,fieldsToForceLazy);
+		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
+		if (concretePage!=null) {
+			return concretePage;
+		}
+		return result;
 	}
 
 	/**
