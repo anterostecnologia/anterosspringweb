@@ -19,6 +19,8 @@ public abstract class AbstractSpringWebAppInitializer implements WebApplicationI
 	private static final String DISPATCHER = "dispatcher";
 	private static final String OPEN_SQL_SESSION_IN_VIEW_FILTER = "OpenSQLSessionInViewFilter";
 	private static final String ANTEROS_CORS_FILTER = "anterosCorsFilter";
+	private static final String ANTEROS_RESPONSE_HEADER_FILTER = "anterosResponseHeaderFilter";
+	
 
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
@@ -82,6 +84,10 @@ public abstract class AbstractSpringWebAppInitializer implements WebApplicationI
 		FilterRegistration.Dynamic springSecurityFilterChain = servletContext.addFilter(SPRING_SECURITY_FILTER_CHAIN,
 				DelegatingFilterProxy.class);
 		springSecurityFilterChain.addMappingForUrlPatterns(null, false, "/*");
+		
+		FilterRegistration.Dynamic responseHeaderFilterChain = servletContext.addFilter(ANTEROS_RESPONSE_HEADER_FILTER,
+				AnterosResponseHeaderFilter.class);
+		responseHeaderFilterChain.addMappingForUrlPatterns(null, false, "/*");
 		
 		
 	}

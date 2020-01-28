@@ -16,11 +16,11 @@
 package br.com.anteros.spring.web.support;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Enumeration;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -86,7 +86,12 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		
 	    String tenantID = request.getHeader("x-tenant-id");
-	    String companyID = request.getHeader("x-company-id");  
+	    String companyID = request.getHeader("x-company-id"); 
+	    String sessionID = request.getHeader("x-session-id"); 
+	    request.getCookies();
+	    for (Cookie cok : request.getCookies()) {
+	    	System.out.println(cok);
+	    }
 		LOG.info("Tenant ID: "+tenantID+" Company ID: "+companyID);
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
 		boolean participate = false;
