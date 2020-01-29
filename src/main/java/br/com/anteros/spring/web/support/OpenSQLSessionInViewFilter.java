@@ -87,11 +87,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		
 	    String tenantID = request.getHeader("x-tenant-id");
 	    String companyID = request.getHeader("x-company-id"); 
-	    String sessionID = request.getHeader("x-session-id"); 
-	    request.getCookies();
-	    for (Cookie cok : request.getCookies()) {
-	    	System.out.println(cok);
-	    }
+	    
 		LOG.info("Tenant ID: "+tenantID+" Company ID: "+companyID);
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
 		boolean participate = false;
