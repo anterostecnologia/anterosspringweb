@@ -142,6 +142,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 					if (!isAsyncStarted(request)) {
 						logger.debug("Closing single Anteros SQLSession in OpenSQLSessionInViewFilter");
 						closeSession(sessionHolder.getSession(), sessionFactory);
+						sessionHolder.removeSession(sessionHolder.getSession());
 					}
 				} else {
 					SQLSessionFactoryUtils.processDeferredClose(sessionFactory);

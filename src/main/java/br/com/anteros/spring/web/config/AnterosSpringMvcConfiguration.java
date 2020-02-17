@@ -81,6 +81,7 @@ public abstract class AnterosSpringMvcConfiguration extends WebMvcConfigurerAdap
 		FilterRegistration.Dynamic openSQLSessionInViewFilterChain = servletContext.addFilter(OPEN_SQL_SESSION_IN_VIEW_FILTER,
 				OpenSQLSessionInViewFilter.class);
 		openSQLSessionInViewFilterChain.addMappingForUrlPatterns(null, false, "/*");
+		appContext.close();
 	}
 
 	public abstract Class<?>[] registerFirstConfigurationClasses();

@@ -167,7 +167,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public T findOne(@PathVariable(value = "id") String id, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) throws Exception {
 		ID castID = (ID) id;
-		return getService().findOne(castID,fieldsToForceLazy);
+		return getService().findOne(castID,true,fieldsToForceLazy);
 	}
 
 	/**
@@ -183,7 +183,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		Page<T> result = getService().findAll(pageRequest, fieldsToForceLazy);
+		Page<T> result = getService().findAll(pageRequest, true, fieldsToForceLazy);
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;
@@ -212,7 +212,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 
 		List<OrderSpecifier> orderBy = AnterosSortFieldsHelper.convertFieldsToOrderby(getService().getSession(),
 				(DynamicEntityPath) this.getService().getEntityPath(), entityCaches, sort);
-		Page<T> result = getService().findAll(builder, pageRequest, fieldsToForceLazy, orderBy.toArray(new OrderSpecifier[] {}));
+		Page<T> result = getService().findAll(builder, true, pageRequest, fieldsToForceLazy, orderBy.toArray(new OrderSpecifier[] {}));
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;
@@ -240,7 +240,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			ID castID = (ID) id;
 			newIds.add(castID);
 		}
-		List<T> result = getService().findAll(newIds,fieldsToForceLazy);
+		List<T> result = getService().findAll(newIds,true, fieldsToForceLazy);
 		List<T> concreteList = this.createConcreteList(result);
 		if (concreteList!=null) {
 			return concreteList;
@@ -286,7 +286,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		}
 
 		Page<T> result = getService().find("select * from " + getService().getTableName() + " where " + sql
-				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest, fieldsToForceLazy);
+				+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : ""), builder.getParams(), pageRequest, true, fieldsToForceLazy);
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;
@@ -317,7 +317,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			throws Exception {
 		PageRequest pageRequest = new PageRequest(page, size);
 		
-		Page<T> result = new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession())
+		Page<T> result = new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession()).readOnly(true)
 				.resultClass(getService().getResultClass()).fieldsSort(sort).page(pageRequest).fieldsToForceLazy(fieldsToForceLazy).buildAndGetPage();
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
@@ -346,7 +346,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "page", required = true) int page,
 			@RequestParam(value = "size", required = true) int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		Page<T> result = getService().findByNamedQuery(queryName, pageRequest, fieldsToForceLazy);
+		Page<T> result = getService().findByNamedQuery(queryName, pageRequest, true, fieldsToForceLazy);
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;
@@ -381,7 +381,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
 			query = getService().getNamedQuery(queryName).getQuery() + " WHERE " + sql
 					+ (StringUtils.isNotEmpty(sort) ? " ORDER BY " + sort : "") + sort;
-			result = getService().find(query, builder.getParams(), pageRequest, fieldsToForceLazy);
+			result = getService().find(query, builder.getParams(), pageRequest, true, fieldsToForceLazy);
 		} catch (Exception e) {
 			throw new SQLSessionException("Não foi possível executar a query nomeada " + queryName, e);
 		}
@@ -413,7 +413,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "parameters", required = true) List<String> parameters,
 			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		Page<T> result = getService().findByNamedQuery(queryName, parameters, pageRequest, fieldsToForceLazy);
+		Page<T> result = getService().findByNamedQuery(queryName, parameters, pageRequest, true, fieldsToForceLazy);
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;
@@ -443,7 +443,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "parameters", required = true) List<String> parameters,
 			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		Page<T> result = getService().findByNamedQuery(queryName, parameters, pageRequest,fieldsToForceLazy);
+		Page<T> result = getService().findByNamedQuery(queryName, parameters, pageRequest, true, fieldsToForceLazy);
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;

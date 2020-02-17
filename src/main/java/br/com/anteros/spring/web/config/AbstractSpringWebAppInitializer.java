@@ -88,6 +88,7 @@ public abstract class AbstractSpringWebAppInitializer implements WebApplicationI
 		FilterRegistration.Dynamic responseHeaderFilterChain = servletContext.addFilter(ANTEROS_RESPONSE_HEADER_FILTER,
 				AnterosResponseHeaderFilter.class);
 		responseHeaderFilterChain.addMappingForUrlPatterns(null, false, "/*");
+		appContext.close();
 		
 		
 	}
