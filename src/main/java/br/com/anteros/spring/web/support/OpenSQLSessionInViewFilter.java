@@ -85,7 +85,7 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
-	    String tenantID = request.getHeader("x-tenant-id");
+	    String tenantID = request.getHeader("x-tenant-id"); 
 	    String companyID = request.getHeader("x-company-id"); 
 	    
 		LOG.info("Tenant ID: "+tenantID+" Company ID: "+companyID);
