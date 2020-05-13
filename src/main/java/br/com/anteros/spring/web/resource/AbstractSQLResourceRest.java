@@ -169,6 +169,22 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		ID castID = (ID) id;
 		return getService().findOne(castID,true,fieldsToForceLazy);
 	}
+	
+	
+	/**
+	 * Busca um objeto pelo seu CODE.
+	 * 
+	 * @param id Code do objeto.
+	 * @return Objeto encontrado.
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/code/{code}", params = { "fieldsToForceLazy" }, method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
+	public T findCode(@PathVariable(value = "code") String code, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) throws Exception {
+		return getService().findByCode(code,true,fieldsToForceLazy);
+	}
 
 	/**
 	 * Busca os objetos da classe com paginação.
@@ -183,7 +199,15 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
 	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-		Page<T> result = getService().findAll(pageRequest, true, fieldsToForceLazy);
+		
+		BooleanBuilder builder = new BooleanBuilder();
+		DynamicEntityPath entityPath = (DynamicEntityPath)this.getService().getEntityPath();			
+		EntityCache entityCache = getService().getSession().getEntityCacheManager().getEntityCache(this.getService().getResultClass());
+		if (StringUtils.isNotBlank(entityCache.getDiscriminatorValue())){
+			builder.and(entityPath.instanceOf(this.getService().getResultClass()));
+		}
+		
+		Page<T> result = getService().findAll(builder, pageRequest, true, fieldsToForceLazy);
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
 			return concretePage;
@@ -206,12 +230,16 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	public Page<T> findAll(@RequestParam("page") int page, @RequestParam("size") int size,
 			@RequestParam("sort") String sort, @RequestParam("fieldsToForceLazy") String fieldsToForceLazy) {
 		PageRequest pageRequest = new PageRequest(page, size);
-
 		BooleanBuilder builder = new BooleanBuilder();
+		DynamicEntityPath entityPath = (DynamicEntityPath)this.getService().getEntityPath();			
+		EntityCache entityCache = getService().getSession().getEntityCacheManager().getEntityCache(this.getService().getResultClass());
+		if (StringUtils.isNotBlank(entityCache.getDiscriminatorValue())){
+			builder.and(entityPath.instanceOf(this.getService().getResultClass()));
+		}	
 		EntityCache[] entityCaches = getService().getSession().getEntityCacheManager().getEntitiesBySuperClassIncluding(this.getService().getResultClass());
 
 		List<OrderSpecifier> orderBy = AnterosSortFieldsHelper.convertFieldsToOrderby(getService().getSession(),
-				(DynamicEntityPath) this.getService().getEntityPath(), entityCaches, sort);
+				entityPath, entityCaches, sort);
 		Page<T> result = getService().findAll(builder, true, pageRequest, fieldsToForceLazy, orderBy.toArray(new OrderSpecifier[] {}));
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
 		if (concretePage!=null) {
@@ -270,14 +298,10 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 		PageRequest pageRequest = new PageRequest(page, size);
 
 		DefaultFilterBuilder builder = AnterosFilterDsl.getFilterBuilder();
-
 		String sort = builder.toSortSql(filter, getService().getSession(), getService().getResultClass());
-
-		String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());
-		
+		String sql = builder.toSql(filter, getService().getSession(), getService().getResultClass());		
 		EntityCache entityCache = getService().getSession().getEntityCacheManager().getEntityCache(getService().getResultClass());
-		DescriptionField tenantId = entityCache.getTenantId();
-		
+		DescriptionField tenantId = entityCache.getTenantId();		
 		if (tenantId!=null) {
 			if (this.getService().getSession().getTenantId()==null) {
 				throw new SQLQueryException("Informe o Tenant ID para realizar consulta na entidade "+entityCache.getEntityClass().getName());
@@ -315,8 +339,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 			@RequestParam(value = "size", required = true) int size, @RequestParam(value = "sort") String sort,
 			@RequestParam("fieldsToForceLazy") String fieldsToForceLazy)
 			throws Exception {
-		PageRequest pageRequest = new PageRequest(page, size);
-		
+		PageRequest pageRequest = new PageRequest(page, size);		
 		Page<T> result = new AnterosMultipleFieldsFilter<T>().filter(filter).fields(fields).session(getService().getSession()).readOnly(true)
 				.resultClass(getService().getResultClass()).fieldsSort(sort).page(pageRequest).fieldsToForceLazy(fieldsToForceLazy).buildAndGetPage();
 		Page<T> concretePage = this.createConcretePage(result.getContent(), pageRequest, result.getTotalElements());
