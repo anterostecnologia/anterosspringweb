@@ -437,7 +437,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/findWithFilterByRelationShip", params = { "page", "size","fieldsToForceLazy" }, method = RequestMethod.POST)
+	@RequestMapping(value = "/findWithFilterByRelationShip/{field}/{id}", params = { "page", "size","fieldsToForceLazy" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	@Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRED, readOnly = true, transactionManager = "transactionManagerSQL")
@@ -531,7 +531,7 @@ public abstract class AbstractSQLResourceRest<T, ID extends Serializable> {
 	 * @return Página
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/findMultipleFieldsByRelationShip", params = { "filter", "fields", "page", "size",
+	@RequestMapping(value = "/findMultipleFieldsByRelationShip/{field}/{id}", params = { "filter", "fields", "page", "size",
 			"sort","fieldsToForceLazy" }, method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
