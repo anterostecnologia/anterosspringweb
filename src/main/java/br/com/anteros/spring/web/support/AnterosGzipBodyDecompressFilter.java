@@ -41,10 +41,10 @@ public class AnterosGzipBodyDecompressFilter implements Filter {
 	}
 
 	 /**
-	 * Analisa a solicitação de servlet para um possível corpo(body) compactado com gzip. Quando codificação de conteúdo
-	 * O cabeçalho tem o valor "gzip" e o método de solicitação é POST. Lemos todos os gzipados
-	 * stream e é haz quaisquer dados descompactá-lo. Caso gzip Content-Encoding
-	 * cabeçalho especificado, mas o corpo não está realmente no formato gzip, lançaremos
+	 * Analisa a solicitação de servlet para um possível corpo(body) compactado com gzip. Quando codificado o conteúdo
+	 * o cabeçalho tem o valor "gzip" e o método de solicitação é POST. Lemos todos os gzipados
+	 * stream e quaisquer dados para descompactá-lo. Caso gzip Content-Encoding
+	 * especificado no cabeçalho, mas o corpo não está realmente no formato gzip, lançaremos
 	 * ZipException.
 	 *
 	 * @param servletRequest  servlet request
