@@ -48,12 +48,24 @@ import br.com.anteros.spring.transaction.SQLSessionHolder;
 public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 
 	public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactorySQL";
+	
+	public static final String DEFAULT_SECURITY_SESSION_FACTORY_BEAN_NAME = "securitySessionFactory";
 
 	private static Logger LOG = LoggerProvider.getInstance().getLogger(OpenSQLSessionInViewFilter.class);
 
 	private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
-
+	
+	private String securitySessionFactoryBeanName = DEFAULT_SECURITY_SESSION_FACTORY_BEAN_NAME;
+	
 	private boolean singleSession = true;
+
+	public String getSecuritySessionFactoryBeanName() {
+		return securitySessionFactoryBeanName;
+	}
+
+	public void setSecuritySessionFactoryBeanName(String securitySessionFactoryBeanName) {
+		this.securitySessionFactoryBeanName = securitySessionFactoryBeanName;
+	}	
 
 	public void setSessionFactoryBeanName(String sessionFactoryBeanName) {
 		this.sessionFactoryBeanName = sessionFactoryBeanName;
@@ -90,7 +102,10 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	    
 		LOG.info("Tenant ID: "+tenantID+" Company ID: "+companyID);
 		SQLSessionFactory sessionFactory = lookupSessionFactory(request);
+		SQLSessionFactory securitySessionFactory = lookupSecuritySessionFactory(request);
+		
 		boolean participate = false;
+		boolean participateSecurity = false;
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 		
@@ -125,6 +140,35 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 				SQLSessionFactoryUtils.initDeferredClose(sessionFactory);
 			}
 		}
+		
+		
+		String keySecuirty = key +"_security";
+		if (isSingleSession() && securitySessionFactory!=null) {
+			if (TransactionSynchronizationManager.hasResource(securitySessionFactory)) {
+				participateSecurity = true;
+			} else {
+				boolean isFirstRequest = !isAsyncDispatch(request);
+				if (isFirstRequest || !applySessionBindingInterceptor(asyncManager, keySecuirty)) {
+					logger.debug("Opening single Anteros SQLSession for security in OpenSQLSessionInViewFilter");
+					SQLSession session = getSession(securitySessionFactory);
+					session.setTenantId(tenantID);
+					session.setCompanyId(companyID);
+					SQLSessionHolder sessionHolder = new SQLSessionHolder(session);
+					TransactionSynchronizationManager.bindResource(securitySessionFactory, sessionHolder);
+
+					AsyncRequestInterceptor interceptor = new AsyncRequestInterceptor(securitySessionFactory, sessionHolder);
+					asyncManager.registerCallableInterceptor(keySecuirty, interceptor);
+					asyncManager.registerDeferredResultInterceptor(keySecuirty, interceptor);
+				}
+			}
+		} else if (securitySessionFactory != null) {
+			Assert.state(!isAsyncStarted(request), "Deferred close mode is not supported on async dispatches");
+			if (SQLSessionFactoryUtils.isDeferredCloseActive(securitySessionFactory)) {
+				participateSecurity = true;
+			} else {
+				SQLSessionFactoryUtils.initDeferredClose(securitySessionFactory);
+			}
+		}
 
 		try {
 			LOG.debug("Before execute doFilter");
@@ -148,6 +192,22 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 					SQLSessionFactoryUtils.processDeferredClose(sessionFactory);
 				}
 			}
+			
+			if (securitySessionFactory != null) {
+				if (!participateSecurity) {
+					if (isSingleSession()) {
+						SQLSessionHolder sessionHolder = (SQLSessionHolder) TransactionSynchronizationManager
+								.unbindResource(securitySessionFactory);
+						if (!isAsyncStarted(request)) {
+							logger.debug("Closing single Anteros SQLSession for security in OpenSQLSessionInViewFilter");
+							closeSession(sessionHolder.getSession(), securitySessionFactory);
+							sessionHolder.removeSession(sessionHolder.getSession());
+						}
+					} else {
+						SQLSessionFactoryUtils.processDeferredClose(securitySessionFactory);
+					}
+				}
+			}
 		}
 	}
 
@@ -162,6 +222,19 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 		}
 		WebApplicationContext wac = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
 		return wac.getBean(getSessionFactoryBeanName(), SQLSessionFactory.class);
+	}
+	
+	protected SQLSessionFactory lookupSecuritySessionFactory(HttpServletRequest request) {
+		return lookupSecuritySessionFactory();
+	}
+
+	protected SQLSessionFactory lookupSecuritySessionFactory() {
+		if (logger.isDebugEnabled()) {
+			logger.debug(
+					"Using security SQLSessionFactory '" + getSessionFactoryBeanName() + "' for OpenSQLSessionInViewFilter");
+		}
+		WebApplicationContext wac = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
+		return wac.getBean(getSecuritySessionFactoryBeanName(), SQLSessionFactory.class);
 	}
 
 	protected SQLSession getSession(SQLSessionFactory sessionFactory) throws DataAccessResourceFailureException {
