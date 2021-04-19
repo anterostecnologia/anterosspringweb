@@ -11,9 +11,21 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import br.com.anteros.core.log.Logger;
+import br.com.anteros.core.log.LoggerProvider;
+import br.com.anteros.spring.web.support.OpenSQLSessionInViewFilter;
+
 public class AnterosResponseHeaderFilter implements Filter {
+	
+	
+	private static Logger LOG = LoggerProvider.getInstance().getLogger(AnterosResponseHeaderFilter.class);
  
-    @Override
+    public AnterosResponseHeaderFilter() {
+		super();
+		LOG.info("Inicializou filtro do AnterosResponseHeaderFilter");  
+	}
+
+	@Override
     public void doFilter(ServletRequest request, ServletResponse response, 
       FilterChain chain) throws IOException, ServletException {
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;

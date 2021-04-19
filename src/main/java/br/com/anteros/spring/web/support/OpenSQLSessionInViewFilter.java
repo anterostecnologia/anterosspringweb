@@ -54,6 +54,13 @@ public class OpenSQLSessionInViewFilter extends OncePerRequestFilter {
 	private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
 
 	private boolean singleSession = true;
+	
+	
+
+	public OpenSQLSessionInViewFilter() {
+		super();
+		LOG.info("Inicializou filtro do OpenSQLSessionInViewFilter");  
+	}
 
 	public void setSessionFactoryBeanName(String sessionFactoryBeanName) {
 		this.sessionFactoryBeanName = sessionFactoryBeanName;
